@@ -8,7 +8,7 @@ const BlogController = require("../controllers/BlogController")
 
 
 
-
+Router.post("/authors", AuthorController.createAuthor)
 
 
 
