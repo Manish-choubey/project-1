@@ -126,10 +126,10 @@ const deleteBlogs = async function (req, res) {
   try {
     let blogId = req.params.blogId;
 
-    let Id = await BlogsModel.findById(blogId);
-    if (!Id) {
-      return res.status(404).send({ status: false, message: "no such blogs exists" });
-    }
+    // let Id = await BlogsModel.findById(blogId);
+    // if (!Id) {
+    //   return res.status(404).send({ status: false, message: "no such blogs exists" });
+    // }
 
     let RemovedBlogs = await BlogsModel.findOneAndUpdate(
       { _id: blogId, isDeleted: false }, { $set: { isDeleted: true, deletedAt: Date.now() } }, { new: true }

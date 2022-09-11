@@ -12,12 +12,12 @@ Router.post("/login", AuthorController.loginAuthor)
 
 Router.post("/blogs",commonMid.authenticate, BlogController.createBlog)
 
-Router.get("/blogs",commonMid.authorizationByquery, BlogController.getBlog)
+Router.get("/blogs",commonMid.authenticate, BlogController.getBlog)
 
-Router.put("/blogs/:blogId",commonMid.authenticate,commonMid.authorizationByid, BlogController.updateBlog)
+Router.put("/blogs/:blogId",commonMid.authenticate,commonMid.auth, BlogController.updateBlog)
 
-Router.delete("/blogs/:blogId",commonMid.authenticate,commonMid.authorizationByid, BlogController.deleteBlogs)
+Router.delete("/blogs/:blogId",commonMid.authenticate,commonMid.auth, BlogController.deleteBlogs)
 
-Router.delete("/blogs",commonMid.authenticate,commonMid.authorizationByquery, BlogController.deleteByquery)
+Router.delete("/blogs",commonMid.authenticate,commonMid.auth, BlogController.deleteByquery)
 
 module.exports = Router;

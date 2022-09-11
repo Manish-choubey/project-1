@@ -73,12 +73,12 @@ const loginAuthor = async function (req, res) {
 
     //--------------------------------token creation-------------------------------------------------------//
     let payload = {
-      authorId: author._id,
+      authorId: author._id.toString(),
       group: "project1",
       organisation: "group46"
     }
 
-    let token = jwt.sign(payload, "project1-secrete-key")
+    let token = jwt.sign({payload}, "project1-secrete-key")
 
     res.setHeader("x-api-key", token)
 

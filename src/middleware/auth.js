@@ -1,4 +1,3 @@
-
 const jwt = require("jsonwebtoken");
 const BlogsModel = require("../Models/BlogsModel");
 
@@ -6,21 +5,34 @@ const BlogsModel = require("../Models/BlogsModel");
 
 //---------------------------------------------AUTHENTICATION------------------------------//
 
-    const authenticate = function (req, res, next) {
-
+const authenticate = async function (req, res, next) {
     try {
-        let token = req.headers["x-api-key"];
 
-        if (!token) { return res.status(403).send({ status: false, msg: "token must be present" }) };
+    
+        let token = req.headers['x-api-key']
+        if (!token) { return res.status(400).send({ status: false, msg: "Token must be present" }) }
 
-        let decodeToken = jwt.verify(token, "project1-secrete-key");
+    
+        jwt.verify(token, "project1-secrete-key", function (err, decodedToken) {
 
-        if (!decodeToken) { return res.status(403).send({ status: false, msg: "token is invalid" }) };
+            if (err) {
 
-        next();
+                return res.status(401).send({ status: false, msg: "Token is invalid" })
+
+            }
+             else {
+                req.token = decodedToken
+                console.log(req.token)
+
+                next()
+
+            }
+        })
+
     }
     catch (error) {
-        res.status(500).send({ status: false, msg: error.message });
+
+        res.status(500).send({ status: false, msg: error.message })
     }
 }
 
@@ -28,75 +40,55 @@ const BlogsModel = require("../Models/BlogsModel");
 
 
 
-//---------------------------------------------AuthorizationByQuery------------------------------//
+//---------------------------------------------Authorization------------------------------//
 
-const authorizationByquery = async function (req, res, next) {
-
+const auth = async function (req, res, next) {
     try {
-        let token = req.headers["x-api-key"];
 
-        if (!token) return res.status(403).send({ status: false, msg: "token must be present" });
+        let Query = req.query
 
-        let decodeToken = jwt.verify(token, "project1-secrete-key");
+        if (Object.keys(Query).length !== 0) {
 
-        if (!decodeToken) return res.status(403).send({ status: false, msg: "token is invalid" });
 
-        let Query = req.query;
+           
+            const Blog = await BlogsModel.findOne({ authorId: req.token.payload.authorId, ...Query })
+            if (!Blog) {
+                return res.status(404).send({ status: false, message: "blog are not found" })
 
-        if (Object.keys(Query).length != 0) {
-
-            const author = await BlogsModel.findOne({ ...Query });
-
-            if (!author) { return res.status(403).send({ status: false, msg: "document not found with given query" }) };
-
-            let authorToModify = author.authorId;
-            let authorLoggedIn = decodeToken.authorId;
-
-            if (authorToModify != authorLoggedIn) { return res.status(403).send({ msg: " sorry! you are not a authorized person" }) };
-
-            next();
-        }
-        else {
-            // return res.status(404).send({ msg: " plzzz add any query" });
-            next();
-        }
-    }
-    catch (error) {
-        res.status(500).send({ status: false, msg: error.message });
-    }
-};
-//---------------------------------------------AuthorizationByID------------------------------//
-
-const authorizationByid = async function (req, res, next) {
-    try {
-        let token = req.headers["x-api-key"];
-        if (!token) return res.status(403).send({ status: false, msg: "token must be present" });
-
-        let decodeToken = jwt.verify(token, "project1-secrete-key");
-
-        if (!decodeToken) return res.status(403).send({ status: false, msg: "token is invalid" });
-
-        let authorLoggedIn = decodeToken.authorId
-        let blogId = req.params.blogId
-
-        let data = await BlogsModel.findById({ _id: blogId })
-
-        if (data){
-            if (data.authorId != authorLoggedIn) {
-
-                return res.status(403).send({ msg: " sorry! you have not allowed" });
             }
-            else {
-                next()
+            
+            if (Blog.authorId.toString() !== req.token.payload.authorId) {
+                return res.status(400).send({ status: false, message: "you are not authorised" });
             }
-        } else {
-            return res.status(403).send({ status: false, msg: "blogid is invalid" });
+
+            return next()
         }
+
+
+
+        //------------------------------------------- AuthorisationByparam-----------------------------------------------//
+
+
+        let BlogId = req.params.blogId;
+
+        const isblog = await BlogsModel.findOne({ _id: BlogId, isDeleted: false })
+        if (!isblog) {
+            return res.status(404).send({ status: false, message: "blog are not found" })
+        }
+
+        if (isblog.authorId.toString() !== req.token.payload.authorId) {
+
+            return res.status(400).send({ status: false, message: "you have not access for authorization" });
+        }
+
+        next()
+
+    } catch (err) {
+
+        res.status(500).send({ status: false, msg: err.message })
     }
 
-    catch (error) {
-        res.status(500).send({ status: false, msg: error.message })
-    }
-};
+}
 
-module.exports = { authenticate, authorizationByid, authorizationByquery }
+
+module.exports = { authenticate, auth }
