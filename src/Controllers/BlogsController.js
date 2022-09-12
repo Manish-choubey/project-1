@@ -99,7 +99,7 @@ const updateBlog = async function (req, res) {
     let Id = await BlogsModel.findById({ _id: blogId });
 
     if (!Id) {
-      return res.status(404).send({ status: false, msg: "blogid not exist" });
+      return res.status(404).send({ status: false, msg: "blogid does not exist" });
     }
 
     let dataBlog = await BlogsModel.findOneAndUpdate(

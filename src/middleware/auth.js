@@ -8,11 +8,11 @@ const BlogsModel = require("../Models/BlogsModel");
 const authenticate = async function (req, res, next) {
     try {
 
-    
+
         let token = req.headers['x-api-key']
         if (!token) { return res.status(400).send({ status: false, msg: "Token must be present" }) }
 
-    
+
         jwt.verify(token, "project1-secrete-key", function (err, decodedToken) {
 
             if (err) {
@@ -20,7 +20,7 @@ const authenticate = async function (req, res, next) {
                 return res.status(401).send({ status: false, msg: "Token is invalid" })
 
             }
-             else {
+            else {
                 req.token = decodedToken
                 console.log(req.token)
 
@@ -50,13 +50,13 @@ const auth = async function (req, res, next) {
         if (Object.keys(Query).length !== 0) {
 
 
-           
+
             const Blog = await BlogsModel.findOne({ authorId: req.token.payload.authorId, ...Query })
             if (!Blog) {
                 return res.status(404).send({ status: false, message: "blog are not found" })
 
             }
-            
+
             if (Blog.authorId.toString() !== req.token.payload.authorId) {
                 return res.status(400).send({ status: false, message: "you are not authorised" });
             }
