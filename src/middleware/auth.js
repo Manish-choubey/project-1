@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const adminModel = require('../model/adminModel.js');
+const adminModel = require('../Models/adminModel');
 const mongoose = require('mongoose')
 
 
@@ -11,7 +11,9 @@ const authentication = async function(req, res, next) {
         if (!token) { return res.status(400).send({ status: false, message: "Token is missing" }) }
         decodedToken = jwt.verify(token, "Admin-student-login-panel", (err, decode) => {
             if (err) {
-                return res.status(400).send({ status: false, message: "Token is not correct!" })
+                let message =
+                    err.message === "jwt expired" ? "Token is expired" : "Token is invalid";
+                return res.status(401).send({ status: false, msg: message })
             }
             req.decode = decode
 
@@ -33,7 +35,7 @@ const Authorisation = async function(req, res, next) {
         if (!checkingAdmin) {
             return res.status(404).send({ status: false, message: "this admin is not found" })
         }
-        if (checkingAdmin._id != req.decode.adminId) {
+        if (checkingAdmin._id != adminId) {
             return res.status(403).send({ status: false, message: "you are not Authorized person" })
         } else {
             next()

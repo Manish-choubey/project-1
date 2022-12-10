@@ -1,6 +1,5 @@
-//const { model } = require("mongoose")
-const adminModel = require("../model/adminModel")
-const studentModel = require("../model/studentModel")
+const adminModel = require("../Models/adminModel")
+const bcrypt = require("bcrypt")
 const jwt = require('jsonwebtoken')
 const {
     isValidEmail,
@@ -29,11 +28,11 @@ const adminRegister = async function(req, res) {
 
 
         if (!isValidName(firstName)) {
-            return res.status(500).send({ status: false, message: "please enter valid first name " })
+            return res.status(400).send({ status: false, message: "please enter valid first name " })
         }
 
         if (!isValidName(lastName)) {
-            return res.status(500).send({ status: false, message: "please enter valid last name " })
+            return res.status(400).send({ status: false, message: "please enter valid last name " })
         }
 
         if (!isValidEmail(email)) {
@@ -42,34 +41,36 @@ const adminRegister = async function(req, res) {
                 message: "EmailId is not valid "
             })
         }
-
+        let CheckUser = await adminModel.findOne({ email: email })
+        if (CheckUser) {
+            return res.status(200).send({ status: false, message: "you are already registered please go to log in page " })
+        }
         if (!isValidPwd(password))
             return res.status(400).send({
                 status: false,
                 message: "Password should be 8-15 characters long and must contain one of 0-9,A-Z,a-z and special characters",
             });
+        //generating salt
+        const salt = await bcrypt.genSalt(10)
+            //hashing
+        const hashedPassword = await bcrypt.hash(password, salt)
+
         const adminData = {
             firstName: firstName,
+            lastName: lastName,
             email: email,
             password: hashedPassword,
         }
 
-        let CheckUser = await adminModel.findOne({ email: email, password: password })
-
-        if (CheckUser) {
-            return res.status(200).send({ status: false, message: "you are already registered please go to log in page " })
-        }
-
-
         let CreatLogIn = await adminModel.create(adminData)
         return res.status(201).send({ status: true, message: "admin created successfully", data: CreatLogIn })
     } catch (error) {
-        res.status(500).send({ status: fasle, message: error.message })
+        res.status(500).send({ status: false, message: error.message })
     }
 }
 
 
-// ----------------------------------//////////////////////////=------------------------------------
+// ----------------------------------AdminLogin=------------------------------------//
 // login admin function 
 const logInAdmin = async function(req, res) {
     try {
@@ -78,7 +79,7 @@ const logInAdmin = async function(req, res) {
         let { email, password } = data
 
         if (isValidBody(req.body)) {
-            return res.status(400).send({ status: false, msg: "please input email and password" })
+            return res.status(400).send({ status: false, msg: "please input email and password to Login" })
         }
 
         // email is mandatory 
@@ -118,7 +119,7 @@ const logInAdmin = async function(req, res) {
                 },
                 "Admin-student-login-panel", {
 
-                    expiresIn: '10h' // expires in 1m minits
+                    expiresIn: '10h' // expires 
 
                 });
             return res.status(201).send({ status: true, message: "logIn successfully", data: { adminId: CheckUser._id, token: token } })

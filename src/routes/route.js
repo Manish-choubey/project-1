@@ -1,21 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const studentController = require("../controller/studentController.js")
-const adminController = require("../controller/adminController.js")
-const auth = require("../middleware/auth.js")
-    //const commonMW = require('../middleware/auth')
+const studentController = require("../Controllers/studentController.js")
+const adminController = require("../Controllers/adminController.js")
+const middleware = require("../middleware/auth")
+    //const commonMW = require('../middleware/middleware')
 
 
-// post login Admin
+//=========================== post login Admin=======================================//
+
+//-------------------registerAdmin---------------------------//
 router.post("/registerAdmin", adminController.adminRegister)
+
+//-------------------Adminlogin---------------------------//
 router.post("/logInAdmin", adminController.logInAdmin)
 
 
-// student panel api's
+//============================student panel api's=================================//
 // create users 
-router.post("/studentRegister", auth.authentication, auth.Authorisation, studentController.studentRegister)
-router.get("/filterStudent", auth.authentication, auth.Authorisation, studentController.filterStudent)
-router.delete("/deleteStudent", auth.authentication, auth.Authorisation, studentController.deleteStudent)
+
+//--------------------------------studentRegister--------------------------------//
+router.post("/studentRegister", middleware.authentication, middleware.Authorisation, studentController.studentRegister)
+
+//------------------------------fetching Studentdetails----------------------------//
+router.get("/filterStudent", middleware.authentication, middleware.Authorisation, studentController.filterStudent)
+
+//------------------------------edit student details------------------------//
+router.put("/editStudent", middleware.authentication, middleware.Authorisation, studentController.editStudents)
+
+
+//----------------------------deleteStudent--------------------------------------//
+router.delete("/deleteStudent", middleware.authentication, middleware.Authorisation, studentController.deleteStudent)
 
 
 
