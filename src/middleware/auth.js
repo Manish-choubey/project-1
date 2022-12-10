@@ -1,89 +1,46 @@
-const jwt = require("jsonwebtoken");
-const BlogsModel = require("../Models/BlogsModel");
+const jwt = require('jsonwebtoken');
+const adminModel = require('../model/adminModel.js');
+const mongoose = require('mongoose')
 
 
+//--------------------------|| AUTHENTICATION ||--------------------------------
 
-//---------------------------------------------AUTHENTICATION------------------------------//
-
-const authenticate = async function(req, res, next) {
+const authentication = async function(req, res, next) {
     try {
-
-
-        let token = req.headers['x-api-key']
-        if (!token) { return res.status(400).send({ status: false, msg: "Token must be present" }) }
-
-
-        jwt.verify(token, "project1-secrete-key", function(err, decodedToken) {
-
+        token = req.headers['x-api-key']
+        if (!token) { return res.status(400).send({ status: false, message: "Token is missing" }) }
+        decodedToken = jwt.verify(token, "Admin-student-login-panel", (err, decode) => {
             if (err) {
-
-                return res.status(401).send({ status: false, msg: "Token is invalid" })
-
-            } else {
-                req.token = decodedToken
-                console.log(req.token)
-
-                next()
-
+                return res.status(400).send({ status: false, message: "Token is not correct!" })
             }
+            req.decode = decode
+
+            next()
         })
-
     } catch (error) {
-
-        res.status(500).send({ status: false, msg: error.message })
+        res.status(500).send({ status: false, message: error.message })
     }
 }
 
+//--------------------------|| AUTHORIZATION ||--------------------------------
 
 
-
-
-//---------------------------------------------Authorization------------------------------//
-
-const auth = async function(req, res, next) {
+const Authorisation = async function(req, res, next) {
     try {
 
-        let Query = req.query
-
-        if (Object.keys(Query).length !== 0) {
-
-            const Blog = await BlogsModel.findOne({ authorId: req.token.authorId, ...Query })
-            if (!Blog) {
-                return res.status(404).send({ status: false, message: "blog are not found" })
-
-            }
-            if (Blog.authorId.toString() !== req.token.authorId) {
-                return res.status(403).send({ status: false, message: "you are not authorised" });
-            }
-
-            return next()
+        let adminId = req.decode.adminId
+        let checkingAdmin = await adminModel.findOne({ _id: adminId })
+        if (!checkingAdmin) {
+            return res.status(404).send({ status: false, message: "this admin is not found" })
         }
-
-
-
-        //------------------------------------------- AuthorisationByparam-----------------------------------------------//
-
-
-        let BlogId = req.params.blogId;
-
-        const isblog = await BlogsModel.findOne({ _id: BlogId, isDeleted: false })
-        if (!isblog) {
-            return res.status(404).send({ status: false, message: "blog are not found" })
+        if (checkingAdmin._id != req.decode.adminId) {
+            return res.status(403).send({ status: false, message: "you are not Authorized person" })
+        } else {
+            next()
         }
-
-        if (isblog.authorId.toString() !== req.token.authorId) {
-
-            return res.status(403).send({ status: false, message: "you have not access for authorization" });
-        }
-
-        next()
-
-    } catch (err) {
-
-        res.status(500).send({ status: false, msg: err.message })
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message })
     }
-
 }
 
-
-module.exports = { authenticate, auth }
+module.exports = { authentication, Authorisation }

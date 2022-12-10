@@ -1,42 +1,29 @@
 const express = require('express');
-const Router = express.Router();
-
-const AuthorController = require("../Controllers/AuthorController")
-const BlogController = require("../Controllers/BlogsController")
-const commonMid = require("../middleware/auth")
-
-//--------------------------------This is authors api-----------------------------//
-
-Router.post("/authors", AuthorController.createAuthor)
+const router = express.Router();
+const studentController = require("../controller/studentController.js")
+const adminController = require("../controller/adminController.js")
+const auth = require("../middleware/auth.js")
+    //const commonMW = require('../middleware/auth')
 
 
-//--------------------------------This is login api-----------------------------//
-
-Router.post("/login", AuthorController.loginAuthor)
-
-
-//--------------------------------This is CreateBlog api-----------------------------//
-
-Router.post("/blogs", commonMid.authenticate, BlogController.createBlog)
+// post login Admin
+router.post("/registerAdmin", adminController.adminRegister)
+router.post("/logInAdmin", adminController.logInAdmin)
 
 
-//--------------------------------This is getBlog api-----------------------------//
-
-Router.get("/blogs", commonMid.authenticate, BlogController.getBlog)
-
-
-//--------------------------------This is updateBlog api-----------------------------//
-
-Router.put("/blogs/:blogId", commonMid.authenticate, commonMid.auth, BlogController.updateBlog)
+// student panel api's
+// create users 
+router.post("/studentRegister", auth.authentication, auth.Authorisation, studentController.studentRegister)
+router.get("/filterStudent", auth.authentication, auth.Authorisation, studentController.filterStudent)
+router.delete("/deleteStudent", auth.authentication, auth.Authorisation, studentController.deleteStudent)
 
 
-//--------------------------------This is deleteBlogs api-----------------------------//
-
-Router.delete("/blogs/:blogId", commonMid.authenticate, commonMid.auth, BlogController.deleteBlogs)
 
 
-//--------------------------------This is deleteByquery api-----------------------------//
-
-Router.delete("/blogs", commonMid.authenticate, commonMid.auth, BlogController.deleteByquery)
-
-module.exports = Router;
+router.all("/*", function(req, res) {
+    res.status(404).send({
+        status: false,
+        message: "Make Sure Your Endpoint is Correct !!!"
+    })
+})
+module.exports = router
